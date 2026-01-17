@@ -23,7 +23,7 @@ export const CATEGORIAS: readonly Categoria[] = [
   "Otros"
 ] as const;
 
-export const STORAGE_KEY = "gastoshogar_gastos";
+export const STORAGE_KEY = "myhomefinance_gastos";
 
 export const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

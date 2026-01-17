@@ -96,7 +96,7 @@ function App() {
 
   // Show main app if logged in
   return (
-    <Layout title="Gastos del Hogar">
+    <Layout title="MyHomeFinance">
       <Stack direction="column" gap={{ base: 6, md: 8 }} align="stretch">
         {/* User info and logout */}
         <Box>

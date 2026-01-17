@@ -1,8 +1,8 @@
 {
-  "name": "gastoshogar",
+  "name": "myhomefinance",
   "private": true,
   "version": "1.0.0",
-  "description": "Aplicación PWA para administración de gastos del hogar",
+  "description": "Personal finance management PWA for your household",
   "type": "module",
   "scripts": {
     "start": "vite --open --port 3000",

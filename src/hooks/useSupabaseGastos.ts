@@ -13,13 +13,10 @@ export function useSupabaseGastos(householdId: string | null) {
   // Load expenses from Supabase
   const loadGastos = useCallback(async () => {
     if (!householdId) {
-      console.log("💰 No household ID, skipping expense load");
       setGastos([]);
       setLoading(false);
       return;
     }
-
-    console.log("💰 Loading expenses for household:", householdId);
 
     try {
       setLoading(true);
@@ -32,11 +29,9 @@ export function useSupabaseGastos(householdId: string | null) {
         .order("expense_date", { ascending: false }) as any;
 
       if (fetchError) {
-        console.error("❌ Error fetching expenses:", fetchError);
+        console.error("Error fetching expenses:", fetchError);
         throw fetchError;
       }
-
-      console.log("✅ Fetched expenses from DB:", data);
 
       // Transform database format to app format
       const transformedGastos: Gasto[] = ((data as any[]) || []).map((expense: any) => ({
@@ -48,10 +43,9 @@ export function useSupabaseGastos(householdId: string | null) {
         createdAt: new Date(expense.created_at).getTime(),
       }));
 
-      console.log("✅ Transformed expenses:", transformedGastos);
       setGastos(transformedGastos);
     } catch (err: any) {
-      console.error("❌ Error loading expenses:", err);
+      console.error("Error loading expenses:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -63,8 +57,6 @@ export function useSupabaseGastos(householdId: string | null) {
     loadGastos();
 
     if (!householdId) return;
-
-    console.log("🔔 Setting up real-time subscription for household:", householdId);
 
     // Set up real-time subscription
     const channel = supabase
@@ -78,10 +70,7 @@ export function useSupabaseGastos(householdId: string | null) {
           filter: `household_id=eq.${householdId}`,
         },
         (payload) => {
-          console.log("🔔 Real-time change received:", payload);
-
           if (payload.eventType === "INSERT") {
-            console.log("➕ INSERT event");
             const newExpense = payload.new as any;
             const newGasto: Gasto = {
               id: newExpense.id,
@@ -91,18 +80,11 @@ export function useSupabaseGastos(householdId: string | null) {
               fecha: newExpense.expense_date,
               createdAt: new Date(newExpense.created_at).getTime(),
             };
-            console.log("➕ Adding new gasto to state:", newGasto);
-            setGastos((prev) => {
-              const updated = [newGasto, ...prev];
-              console.log("📊 New gastos state:", updated);
-              return updated;
-            });
+            setGastos((prev) => [newGasto, ...prev]);
           } else if (payload.eventType === "DELETE") {
-            console.log("🗑️ DELETE event");
             const deletedId = (payload.old as any).id;
             setGastos((prev) => prev.filter((g) => g.id !== deletedId));
           } else if (payload.eventType === "UPDATE") {
-            console.log("✏️ UPDATE event");
             const updatedExpense = payload.new as any;
             const updatedGasto: Gasto = {
               id: updatedExpense.id,
@@ -118,12 +100,9 @@ export function useSupabaseGastos(householdId: string | null) {
           }
         }
       )
-      .subscribe((status) => {
-        console.log("🔔 Subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
-      console.log("🔕 Unsubscribing from real-time channel");
       supabase.removeChannel(channel);
     };
   }, [householdId, loadGastos]);
@@ -161,7 +140,6 @@ export function useSupabaseGastos(householdId: string | null) {
           createdAt: new Date((data as any).created_at).getTime(),
         };
 
-        console.log("✅ Expense created, reloading list...");
         // Reload expenses to ensure UI is updated (fallback if realtime doesn't work)
         await loadGastos();
 
@@ -191,7 +169,6 @@ export function useSupabaseGastos(householdId: string | null) {
 
         if (deleteError) throw deleteError;
 
-        console.log("✅ Expense deleted, reloading list...");
         // Reload expenses to ensure UI is updated (fallback if realtime doesn't work)
         await loadGastos();
 

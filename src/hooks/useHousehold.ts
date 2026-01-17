@@ -18,11 +18,8 @@ export function useHousehold() {
 
   const createDefaultHousehold = useCallback(async () => {
     if (!user) {
-      console.log("❌ No user available for creating household");
       return null;
     }
-
-    console.log("🏠 Creating household for user:", user.id);
 
     try {
       // Create household
@@ -36,7 +33,7 @@ export function useHousehold() {
         .single();
 
       if (createError) {
-        console.error("❌ Error creating household:", {
+        console.error("Error creating household:", {
           code: createError.code,
           message: createError.message,
           details: createError.details,
@@ -44,8 +41,6 @@ export function useHousehold() {
         });
         throw createError;
       }
-
-      console.log("✅ Household created:", newHousehold);
 
       // Add user as admin member explicitly (no trigger)
       const { error: memberError } = await supabase
@@ -57,22 +52,20 @@ export function useHousehold() {
         } as any);
 
       if (memberError) {
-        console.error("❌ Error adding member:", {
+        console.error("Error adding member:", {
           code: memberError.code,
           message: memberError.message,
           details: memberError.details,
           hint: memberError.hint
         });
         // If member insert fails but household was created, try to clean up
-        console.log("🧹 Cleaning up household...");
         await supabase.from("households").delete().eq("id", (newHousehold as any).id);
         throw memberError;
       }
 
-      console.log("✅ Member added successfully");
       return newHousehold;
     } catch (err: any) {
-      console.error("❌ Error in createDefaultHousehold:", {
+      console.error("Error in createDefaultHousehold:", {
         message: err.message,
         code: err.code,
         details: err.details,
@@ -90,8 +83,6 @@ export function useHousehold() {
       return;
     }
 
-    console.log("🏠 Loading household for user:", user.id);
-
     try {
       setLoading(true);
       setError(null);
@@ -104,11 +95,8 @@ export function useHousehold() {
 
       if (memberError) throw memberError;
 
-      console.log("📋 User memberships:", memberships);
-
       if (!memberships || memberships.length === 0) {
         // No household found, create default one
-        console.log("🆕 No household found, creating new one");
         const newHousehold = await createDefaultHousehold();
         if (newHousehold) {
           setHousehold(newHousehold);
@@ -116,7 +104,6 @@ export function useHousehold() {
       } else if (memberships.length === 1) {
         // Only one household, use it
         const householdId = memberships[0].household_id;
-        console.log("🔍 Fetching household details:", householdId);
 
         const { data: householdData, error: householdError } = await supabase
           .from("households")
@@ -126,12 +113,9 @@ export function useHousehold() {
 
         if (householdError) throw householdError;
 
-        console.log("✅ Household loaded:", householdData);
         setHousehold(householdData as any);
       } else {
         // Multiple households - choose the one with most members
-        console.log("🏘️ Multiple households found, selecting best one...");
-
         // Get member count for each household
         const householdIds = memberships.map(m => m.household_id);
         const { data: memberCounts } = await supabase
@@ -157,8 +141,6 @@ export function useHousehold() {
           }
         }
 
-        console.log("✨ Selected household with most members:", selectedHouseholdId, `(${maxMembers} members)`);
-
         // Get household details
         const { data: householdData, error: householdError } = await supabase
           .from("households")
@@ -168,11 +150,10 @@ export function useHousehold() {
 
         if (householdError) throw householdError;
 
-        console.log("✅ Household loaded:", householdData);
         setHousehold(householdData as any);
       }
     } catch (err: any) {
-      console.error("❌ Error loading household:", err);
+      console.error("Error loading household:", err);
       setError(err.message);
     } finally {
       setLoading(false);
