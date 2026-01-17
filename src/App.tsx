@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Box, Heading, Stack, Separator, Button, Spinner, Text } from "@chakra-ui/react";
+import { Box, Heading, Stack, Separator, Button, Spinner, Text, IconButton } from "@chakra-ui/react";
 import { useAuth } from "./contexts/AuthContext";
 import { useHousehold } from "./hooks/useHousehold";
 import { useSupabaseGastos } from "./hooks/useSupabaseGastos";
+import { usePWAInstall } from "./hooks/usePWAInstall";
 import {
   Layout,
   FormularioGasto,
@@ -12,15 +13,18 @@ import {
 } from "./components";
 import { AuthPage } from "./components/auth/AuthPage";
 import { HouseholdMembers } from "./components/household/HouseholdMembers";
+import { ShareQR } from "./components/ui/ShareQR";
 import { GastoFormData } from "./types/gasto.types";
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { household, loading: householdLoading } = useHousehold();
+  const { canInstall, install } = usePWAInstall();
   const {
     gastos,
     agregarGasto,
     eliminarGasto,
+    actualizarGasto,
     filtrarGastos,
     obtenerResumenMensual,
     mesesDisponibles,
@@ -60,6 +64,14 @@ function App() {
       await eliminarGasto(id);
     } catch (error) {
       console.error("Error deleting expense:", error);
+    }
+  };
+
+  const handleEditarGasto = async (id: string, formData: GastoFormData) => {
+    try {
+      await actualizarGasto(id, formData);
+    } catch (error) {
+      console.error("Error updating expense:", error);
     }
   };
 
@@ -104,14 +116,29 @@ function App() {
             <Text fontSize="sm" color="gray.600">
               {user.email}
             </Text>
-            <Button
-              size="sm"
-              variant="ghost"
-              colorPalette="red"
-              onClick={handleSignOut}
-            >
-              Cerrar Sesión
-            </Button>
+            <Stack direction="row" gap={1} align="center">
+              {canInstall && (
+                <IconButton
+                  aria-label="Instalar App"
+                  variant="ghost"
+                  size="sm"
+                  onClick={install}
+                  title="Instalar App"
+                >
+                  <Text>📥</Text>
+                </IconButton>
+              )}
+              <ShareQR />
+              <IconButton
+                aria-label="Cerrar Sesión"
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                title="Cerrar Sesión"
+              >
+                <Text>🚪</Text>
+              </IconButton>
+            </Stack>
           </Stack>
         </Box>
 
@@ -182,6 +209,7 @@ function App() {
           <ListaGastos
             gastos={gastosFiltrados}
             onEliminar={handleEliminarGasto}
+            onEditar={handleEditarGasto}
           />
         </Box>
       </Stack>

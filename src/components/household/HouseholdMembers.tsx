@@ -26,6 +26,12 @@ interface Member {
   email?: string;
 }
 
+interface PendingInvitation {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
 interface HouseholdMembersProps {
   householdId: string;
   householdName: string;
@@ -34,9 +40,11 @@ interface HouseholdMembersProps {
 export function HouseholdMembers({ householdId, householdName }: HouseholdMembersProps) {
   const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
 
   const loadMembers = async () => {
     try {
@@ -51,6 +59,17 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
       if (error) throw error;
 
       setMembers((data || []) as Member[]);
+
+      // Load pending invitations
+      const { data: invitations, error: invError } = await supabase
+        .from("pending_invitations")
+        .select("id, email, created_at")
+        .eq("household_id", householdId)
+        .order("created_at", { ascending: false });
+
+      if (!invError) {
+        setPendingInvitations(invitations || []);
+      }
     } catch (err: any) {
       console.error("Error loading members:", err);
       toaster.create({
@@ -80,54 +99,97 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
     setInviting(true);
 
     try {
-      // Check if user exists by email
-      const { data: userData, error: userError } = await supabase.rpc(
+      // Check if already a member
+      const { data: existingMember } = await supabase.rpc(
         "get_user_id_by_email",
         { email_param: inviteEmail }
       );
 
-      if (userError || !userData) {
+      if (existingMember) {
+        // User exists, check if already member
+        const { data: membership } = await supabase
+          .from("household_members")
+          .select("id")
+          .eq("household_id", householdId)
+          .eq("user_id", existingMember)
+          .maybeSingle();
+
+        if (membership) {
+          toaster.create({
+            title: "Ya es miembro",
+            description: "Este usuario ya forma parte del hogar",
+            type: "info",
+          });
+          setInviting(false);
+          return;
+        }
+
+        // Add existing user directly
+        const { error: insertError } = await supabase
+          .from("household_members")
+          .insert({
+            household_id: householdId,
+            user_id: existingMember,
+            role: "member",
+          } as any);
+
+        if (insertError) throw insertError;
+
         toaster.create({
-          title: "Usuario no encontrado",
-          description: "Este email no está registrado. Pídele que se registre primero.",
-          type: "warning",
+          title: "Miembro agregado",
+          description: `${inviteEmail} ahora es parte del hogar`,
+          type: "success",
         });
+
+        setInviteEmail("");
+        await loadMembers();
         setInviting(false);
         return;
       }
 
-      // Check if already a member
-      const { data: existingMember } = await supabase
-        .from("household_members")
+      // Check if already invited
+      const { data: existingInvitation } = await supabase
+        .from("pending_invitations")
         .select("id")
         .eq("household_id", householdId)
-        .eq("user_id", userData)
+        .eq("email", inviteEmail.toLowerCase())
         .maybeSingle();
 
-      if (existingMember) {
+      if (existingInvitation) {
         toaster.create({
-          title: "Ya es miembro",
-          description: "Este usuario ya forma parte del hogar",
+          title: "Ya invitado",
+          description: "Este email ya tiene una invitación pendiente",
           type: "info",
         });
         setInviting(false);
         return;
       }
 
-      // Add member
-      const { error: insertError } = await supabase
-        .from("household_members")
+      // Create pending invitation
+      const { error: inviteError } = await supabase
+        .from("pending_invitations")
         .insert({
+          email: inviteEmail.toLowerCase(),
           household_id: householdId,
-          user_id: userData,
-          role: "member",
-        } as any);
+          invited_by: user?.id,
+        });
 
-      if (insertError) throw insertError;
+      if (inviteError) throw inviteError;
+
+      // Send magic link email for registration/login
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: inviteEmail,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `https://myhomefinance.onrender.com`,
+        },
+      });
+
+      if (otpError) throw otpError;
 
       toaster.create({
-        title: "¡Invitación enviada!",
-        description: `${inviteEmail} ahora es parte del hogar`,
+        title: "Invitación enviada",
+        description: `Se envió un email de invitación a ${inviteEmail}`,
         type: "success",
       });
 
@@ -137,11 +199,62 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
       console.error("Error inviting member:", err);
       toaster.create({
         title: "Error",
-        description: "No se pudo enviar la invitación",
+        description: err.message || "No se pudo enviar la invitación",
         type: "error",
       });
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("pending_invitations")
+        .delete()
+        .eq("id", invitationId);
+
+      if (error) throw error;
+
+      toaster.create({
+        title: "Invitación cancelada",
+        type: "success",
+      });
+
+      await loadMembers();
+    } catch (err: any) {
+      console.error("Error canceling invitation:", err);
+      toaster.create({
+        title: "Error",
+        description: "No se pudo cancelar la invitación",
+        type: "error",
+      });
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string, memberEmail: string) => {
+    try {
+      const { error } = await supabase
+        .from("household_members")
+        .delete()
+        .eq("id", memberId);
+
+      if (error) throw error;
+
+      toaster.create({
+        title: "Miembro eliminado",
+        description: `${memberEmail} fue removido del hogar`,
+        type: "success",
+      });
+
+      await loadMembers();
+    } catch (err: any) {
+      console.error("Error removing member:", err);
+      toaster.create({
+        title: "Error",
+        description: "No se pudo eliminar al miembro",
+        type: "error",
+      });
     }
   };
 
@@ -155,9 +268,21 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
       boxShadow="md"
     >
       <Stack direction="column" gap={4}>
-        <Heading as="h3" size="md" color="primary.600">
-          {householdName}
-        </Heading>
+        <Stack direction="row" justify="space-between" align="center">
+          <Heading as="h3" size="md" color="primary.600">
+            {householdName}
+          </Heading>
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant={showInviteForm ? "solid" : "outline"}
+              colorPalette="primary"
+              onClick={() => setShowInviteForm(!showInviteForm)}
+            >
+              {showInviteForm ? "Cancelar" : "+ Invitar"}
+            </Button>
+          )}
+        </Stack>
 
         {/* Members List */}
         <Box>
@@ -179,17 +304,64 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
                   borderRadius="md"
                 >
                   <Text fontSize="sm">{member.email}</Text>
-                  <Badge colorPalette={member.role === "admin" ? "orange" : "blue"}>
-                    {member.role === "admin" ? "Admin" : "Miembro"}
-                  </Badge>
+                  <Stack direction="row" gap={2} align="center">
+                    <Badge colorPalette={member.role === "admin" ? "orange" : "blue"}>
+                      {member.role === "admin" ? "Admin" : "Miembro"}
+                    </Badge>
+                    {isAdmin && member.user_id !== user?.id && (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorPalette="red"
+                        onClick={() => handleRemoveMember(member.id, member.email || "")}
+                      >
+                        Quitar
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
               ))}
             </Stack>
           )}
         </Box>
 
-        {/* Invite Section (only for admins) */}
-        {isAdmin && (
+        {/* Pending Invitations */}
+        {isAdmin && pendingInvitations.length > 0 && (
+          <Box>
+            <Text fontWeight="medium" fontSize="sm" mb={2}>
+              Invitaciones pendientes ({pendingInvitations.length})
+            </Text>
+            <Stack direction="column" gap={2}>
+              {pendingInvitations.map((invitation) => (
+                <Stack
+                  key={invitation.id}
+                  direction="row"
+                  justify="space-between"
+                  align="center"
+                  p={3}
+                  bg="yellow.50"
+                  borderRadius="md"
+                >
+                  <Text fontSize="sm">{invitation.email}</Text>
+                  <Stack direction="row" gap={2} align="center">
+                    <Badge colorPalette="yellow">Pendiente</Badge>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      colorPalette="red"
+                      onClick={() => handleCancelInvitation(invitation.id)}
+                    >
+                      Cancelar
+                    </Button>
+                  </Stack>
+                </Stack>
+              ))}
+            </Stack>
+          </Box>
+        )}
+
+        {/* Invite Section (only for admins, collapsible) */}
+        {isAdmin && showInviteForm && (
           <Box pt={4} borderTop="1px solid" borderColor="gray.200">
             <Text fontWeight="medium" fontSize="sm" mb={2}>
               Invitar miembro
@@ -212,7 +384,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
                 Enviar Invitación
               </Button>
               <Text fontSize="xs" color="gray.600">
-                El usuario debe estar registrado primero
+                Se enviará un email con un link para unirse al hogar
               </Text>
             </Stack>
           </Box>

@@ -1,13 +1,14 @@
 import { Stack, Text, Box } from "@chakra-ui/react";
-import { Gasto } from "../../types/gasto.types";
+import { Gasto, GastoFormData } from "../../types/gasto.types";
 import { TarjetaGasto } from "./TarjetaGasto";
 
 interface ListaGastosProps {
   gastos: Gasto[];
   onEliminar: (id: string) => void;
+  onEditar: (id: string, data: GastoFormData) => Promise<void>;
 }
 
-export function ListaGastos({ gastos, onEliminar }: ListaGastosProps) {
+export function ListaGastos({ gastos, onEliminar, onEditar }: ListaGastosProps) {
   if (gastos.length === 0) {
     return (
       <Box
@@ -34,6 +35,7 @@ export function ListaGastos({ gastos, onEliminar }: ListaGastosProps) {
           key={gasto.id}
           gasto={gasto}
           onEliminar={onEliminar}
+          onEditar={onEditar}
         />
       ))}
     </Stack>

@@ -9,7 +9,9 @@ export const formatearMoneda = (importe: number): string => {
 };
 
 export const formatearFecha = (fecha: string): string => {
-  return new Date(fecha).toLocaleDateString(FORMATO_MONEDA, {
+  // Agregar T00:00:00 para que se interprete como hora local, no UTC
+  const fechaLocal = new Date(fecha + "T00:00:00");
+  return fechaLocal.toLocaleDateString(FORMATO_MONEDA, {
     year: "numeric",
     month: "long",
     day: "numeric",

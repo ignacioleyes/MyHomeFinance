@@ -16,6 +16,56 @@ export function useHousehold() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Check and process pending invitations for the user
+  const processPendingInvitations = useCallback(async (): Promise<string | null> => {
+    if (!user?.email) return null;
+
+    try {
+      // Find pending invitations for this email
+      const { data: invitations, error: invError } = await supabase
+        .from("pending_invitations")
+        .select("id, household_id")
+        .eq("email", user.email.toLowerCase())
+        .limit(1);
+
+      if (invError || !invitations || invitations.length === 0) {
+        return null;
+      }
+
+      const invitation = invitations[0];
+
+      // Add user to the household
+      const { error: memberError } = await supabase
+        .from("household_members")
+        .insert({
+          household_id: invitation.household_id,
+          user_id: user.id,
+          role: "member",
+        } as any);
+
+      if (memberError) {
+        // Check if already a member (might happen on retry)
+        if (memberError.code === "23505") {
+          // Unique violation - already a member
+        } else {
+          console.error("Error adding member from invitation:", memberError);
+          return null;
+        }
+      }
+
+      // Delete the processed invitation
+      await supabase
+        .from("pending_invitations")
+        .delete()
+        .eq("id", invitation.id);
+
+      return invitation.household_id;
+    } catch (err) {
+      console.error("Error processing invitation:", err);
+      return null;
+    }
+  }, [user]);
+
   const createDefaultHousehold = useCallback(async () => {
     if (!user) {
       return null;
@@ -87,7 +137,10 @@ export function useHousehold() {
       setLoading(true);
       setError(null);
 
-      // First, check if user is member of any household
+      // First, check and process any pending invitations
+      const invitedHouseholdId = await processPendingInvitations();
+
+      // Check if user is member of any household
       const { data: memberships, error: memberError } = await supabase
         .from("household_members")
         .select("household_id")
@@ -96,10 +149,23 @@ export function useHousehold() {
       if (memberError) throw memberError;
 
       if (!memberships || memberships.length === 0) {
-        // No household found, create default one
-        const newHousehold = await createDefaultHousehold();
-        if (newHousehold) {
-          setHousehold(newHousehold);
+        // No household found
+        if (invitedHouseholdId) {
+          // Was just added via invitation, fetch that household
+          const { data: householdData, error: householdError } = await supabase
+            .from("households")
+            .select("*")
+            .eq("id", invitedHouseholdId)
+            .single();
+
+          if (householdError) throw householdError;
+          setHousehold(householdData as any);
+        } else {
+          // No invitation, create default household
+          const newHousehold = await createDefaultHousehold();
+          if (newHousehold) {
+            setHousehold(newHousehold);
+          }
         }
       } else if (memberships.length === 1) {
         // Only one household, use it
@@ -158,7 +224,7 @@ export function useHousehold() {
     } finally {
       setLoading(false);
     }
-  }, [user, createDefaultHousehold]);
+  }, [user, createDefaultHousehold, processPendingInvitations]);
 
   useEffect(() => {
     loadHousehold();

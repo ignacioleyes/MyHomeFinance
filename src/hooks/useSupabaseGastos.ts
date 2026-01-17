@@ -205,14 +205,16 @@ export function useSupabaseGastos(householdId: string | null) {
 
         if (updateError) throw updateError;
 
-        // Real-time subscription will handle updating state
+        // Reload expenses to ensure UI is updated (fallback if realtime doesn't work)
+        await loadGastos();
+
         return true;
       } catch (err: any) {
         console.error("Error updating expense:", err);
         return false;
       }
     },
-    [householdId]
+    [householdId, loadGastos]
   );
 
   // Filtrar gastos (client-side filtering on already loaded data)
