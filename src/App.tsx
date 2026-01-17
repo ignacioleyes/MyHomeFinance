@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Heading, Stack, Separator, Button, Spinner, Text, IconButton } from "@chakra-ui/react";
+import { Box, Heading, Stack, Separator, Spinner, Text, IconButton } from "@chakra-ui/react";
 import { useAuth } from "./contexts/AuthContext";
 import { useHousehold } from "./hooks/useHousehold";
 import { useSupabaseGastos } from "./hooks/useSupabaseGastos";
