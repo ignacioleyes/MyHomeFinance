@@ -22,6 +22,7 @@ import { Button } from "@chakra-ui/react";
 import { Gasto, GastoFormData } from "../../types/gasto.types";
 import { formatearMoneda, formatearFecha } from "../../utils/formatters";
 import { FormularioGasto } from "../forms/FormularioGasto";
+import { getCategoryColors } from "../../theme/categoryColors";
 
 interface TarjetaGastoProps {
   gasto: Gasto;
@@ -31,6 +32,7 @@ interface TarjetaGastoProps {
 
 export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const categoryColors = getCategoryColors(gasto.categoria);
 
   const handleEditar = async (data: GastoFormData) => {
     await onEditar(gasto.id, data);
@@ -39,22 +41,28 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
 
   return (
     <Box
-      bg="white"
+      bg={categoryColors.bg}
       p={4}
-      borderRadius="md"
+      borderRadius="xl"
       boxShadow="sm"
       borderLeft="4px solid"
-      borderLeftColor="primary.500"
-      _hover={{ boxShadow: "md" }}
-      transition="box-shadow 0.2s"
+      borderLeftColor={categoryColors.border}
+      _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
+      transition="all 0.2s"
     >
       <Stack direction="row" justify="space-between" align="start">
         <Stack direction="column" align="start" gap={1} flex={1}>
-          <Stack direction="row">
-            <Text fontSize="2xl" fontWeight="bold" color="primary.600">
+          <Stack direction="row" align="center" gap={2}>
+            <Text fontSize="2xl" fontWeight="bold" color={categoryColors.text}>
               {formatearMoneda(gasto.importe)}
             </Text>
-            <Badge colorPalette="orange" size="sm">
+            <Badge
+              bg={categoryColors.border}
+              color="white"
+              size="sm"
+              borderRadius="full"
+              px={2}
+            >
               {gasto.categoria}
             </Badge>
           </Stack>

@@ -6,7 +6,6 @@ import {
   Textarea,
   Text,
   Stack,
-  createToaster,
 } from "@chakra-ui/react";
 import {
   NativeSelectField,
@@ -15,11 +14,7 @@ import {
 import { GastoFormData } from "../../types/gasto.types";
 import { CATEGORIAS } from "../../utils/constants";
 import { validarFormularioGasto } from "../../utils/validators";
-
-const toaster = createToaster({
-  placement: "top",
-  duration: 3000,
-});
+import { toaster } from "../../lib/toast";
 
 interface FormularioGastoProps {
   onSubmit: (data: GastoFormData) => Promise<void> | void;
@@ -107,8 +102,8 @@ export function FormularioGasto({
       onSubmit={handleSubmit}
       bg="white"
       p={{ base: 4, md: 6 }}
-      borderRadius="lg"
-      boxShadow="md"
+      borderRadius="2xl"
+      boxShadow="sm"
     >
       <Stack direction="column" gap={4} align="stretch">
         {/* Campo Importe */}
@@ -194,7 +189,7 @@ export function FormularioGasto({
         <Stack direction="column" gap={2} w="full">
           <Button
             type="submit"
-            colorPalette="primary"
+            colorPalette="teal"
             size="lg"
             w="full"
             loading={isSubmitting}

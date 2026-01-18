@@ -57,3 +57,29 @@ export function validarRegisterForm(data: RegisterFormData): ValidationResult {
     errors,
   };
 }
+
+export function mapAuthErrorToMessage(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return "Ocurrió un error inesperado";
+  }
+
+  const message = (error as { message?: string }).message ?? "";
+
+  if (message.includes("Invalid login credentials")) {
+    return "Email o contraseña incorrectos";
+  }
+
+  if (message.includes("Email not confirmed")) {
+    return "Tu cuenta aún no fue confirmada";
+  }
+
+  if (message.includes("User already registered")) {
+    return "El email ya está registrado";
+  }
+
+  if (message.toLowerCase().includes("password")) {
+    return "La contraseña no cumple con los requisitos mínimos";
+  }
+
+  return "No se pudo completar la operación. Intente nuevamente.";
+}

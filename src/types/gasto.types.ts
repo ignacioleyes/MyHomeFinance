@@ -25,7 +25,7 @@ export type Categoria =
   | "Servicios"
   | "Farmacia"
   | "Entretenimiento"
-  | "Depilación"
+  | "Kiosco"
   | "Alquiler"
   | "Otros";
 

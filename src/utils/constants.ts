@@ -18,7 +18,7 @@ export const CATEGORIAS: readonly Categoria[] = [
   "Servicios",
   "Farmacia",
   "Entretenimiento",
-  "Depilación",
+  "Kiosco",
   "Alquiler",
   "Otros"
 ] as const;

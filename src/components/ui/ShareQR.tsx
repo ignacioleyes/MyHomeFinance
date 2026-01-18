@@ -54,6 +54,8 @@ export function ShareQR() {
           variant="ghost"
           size="sm"
           title="Compartir QR"
+          color="white"
+          _hover={{ bg: "whiteAlpha.200" }}
         >
           <Text>📲</Text>
         </IconButton>

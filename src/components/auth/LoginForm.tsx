@@ -5,16 +5,13 @@ import {
   Input,
   Text,
   Stack,
-  createToaster,
 } from "@chakra-ui/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { LoginFormData } from "../../types/auth.types";
 import { validarLoginForm } from "../../utils/auth-validators";
-
-const toaster = createToaster({
-  placement: "top",
-  duration: 3000,
-});
+import { mapAuthErrorToMessage } from "../../utils/auth-validators";
+import { toaster } from "../../lib/toast";
+import { showErrorToast, showSuccessToast } from "../../lib/toast";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -28,6 +25,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
     password: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
+  const [authError, setAuthError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field: keyof LoginFormData, value: string) => {
@@ -39,20 +37,19 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
         return newErrors;
       });
     }
+    // Limpia error de autenticación global
+    if (authError) {
+      setAuthError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validation = validarLoginForm(formData);
-
     if (!validation.isValid) {
       setErrors(validation.errors);
-      toaster.create({
-        title: "Error en el formulario",
-        description: "Por favor corrija los errores antes de continuar",
-        type: "error",
-      });
+      showErrorToast("Error en el formulario", "Por favor corrija los errores antes de continuar");
       return;
     }
 
@@ -60,19 +57,12 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
 
     try {
       await signIn(formData.email, formData.password);
-      toaster.create({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido de vuelta",
-        type: "success",
-      });
+      showSuccessToast("Inicio de sesión exitoso", "Bienvenido de vuelta");
       onSuccess?.();
     } catch (error: any) {
-      console.error("Login error:", error);
-      toaster.create({
-        title: "Error al iniciar sesión",
-        description: error.message || "Credenciales inválidas",
-        type: "error",
-      });
+      const message = mapAuthErrorToMessage(error)
+      setAuthError(message);
+      showErrorToast("Error de autenticación", message);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,6 +83,20 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
         <Text fontSize="2xl" fontWeight="bold" color="primary.600" textAlign="center">
           Iniciar Sesión
         </Text>
+        {authError && (
+        <Box
+          bg="red.50"
+          border="1px solid"
+          borderColor="red.200"
+          borderRadius="md"
+          p={3}
+          py={2}
+        >
+          <Text color="red.600" fontSize="sm">
+            {authError}
+          </Text>
+        </Box>
+      )}
 
         {/* Email */}
         <Stack gap={1.5}>
@@ -137,7 +141,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
         {/* Submit Button */}
         <Button
           type="submit"
-          colorPalette="primary"
+          colorPalette="teal"
           size="lg"
           w="full"
           loading={isSubmitting}

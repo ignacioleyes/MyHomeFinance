@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ChakraProvider } from "@chakra-ui/react";
+import { Toaster } from "@chakra-ui/react";
 import { registerSW } from "virtual:pwa-register";
 import { system } from "./theme/system";
 import { AuthProvider } from "./contexts/AuthContext";
+import { toaster } from "./lib/toast";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -22,6 +24,9 @@ const updateSW = registerSW({
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <ChakraProvider value={system}>
+            <Toaster toaster={toaster}>
+                {() => null}
+            </Toaster>
             <AuthProvider>
                 <App />
             </AuthProvider>

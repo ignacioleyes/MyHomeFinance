@@ -7,16 +7,11 @@ import {
   Stack,
   Heading,
   Badge,
-  createToaster,
   Spinner,
 } from "@chakra-ui/react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
-
-const toaster = createToaster({
-  placement: "top",
-  duration: 3000,
-});
+import { toaster } from "../../lib/toast";
 
 interface Member {
   id: string;

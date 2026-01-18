@@ -168,7 +168,7 @@ const CATEGORIAS = [
   "Panadería", "Verdulería", "Carnicería", "Pollería",
   "Restaurantes", "Ropa", "Cafecito", "Tarjetas de Crédito",
   "Préstamos", "Mascotas", "Servicios", "Farmacia",
-  "Entretenimiento", "Depilación", "Alquiler", "Otros"
+  "Entretenimiento", "Kiosco", "Alquiler", "Otros"
 ];
 ```
 

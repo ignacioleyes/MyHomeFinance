@@ -5,16 +5,11 @@ import {
   Input,
   Text,
   Stack,
-  createToaster,
 } from "@chakra-ui/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { RegisterFormData } from "../../types/auth.types";
 import { validarRegisterForm } from "../../utils/auth-validators";
-
-const toaster = createToaster({
-  placement: "top",
-  duration: 3000,
-});
+import { toaster } from "../../lib/toast";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
