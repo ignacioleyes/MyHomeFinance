@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Heading, Stack } from "@chakra-ui/react";
 import { useHousehold } from "../hooks/useHousehold";
 import { useSupabaseGastos } from "../hooks/useSupabaseGastos";
 import { ListaGastos, ResumenMensual, SelectorMes } from "../components";

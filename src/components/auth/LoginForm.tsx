@@ -10,7 +10,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { LoginFormData } from "../../types/auth.types";
 import { validarLoginForm } from "../../utils/auth-validators";
 import { mapAuthErrorToMessage } from "../../utils/auth-validators";
-import { toaster } from "../../lib/toast";
 import { showErrorToast, showSuccessToast } from "../../lib/toast";
 
 interface LoginFormProps {
