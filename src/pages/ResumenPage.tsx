@@ -84,14 +84,15 @@ export function ResumenPage() {
       {/* Link a detalle de gastos */}
       <Box>
         <Button
-          as={RouterLink}
-          to="/gastos"
+          asChild
           colorPalette="teal"
           variant="outline"
           size="lg"
           w="full"
         >
-          Ver detalle de los gastos
+          <RouterLink to="/gastos">
+            Ver detalle de los gastos
+          </RouterLink>
         </Button>
       </Box>
     </Stack>

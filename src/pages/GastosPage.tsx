@@ -22,7 +22,6 @@ export function GastosPage() {
 
   const { household, loading: householdLoading } = useHousehold();
   const {
-    gastos,
     eliminarGasto,
     actualizarGasto,
     filtrarGastos,
