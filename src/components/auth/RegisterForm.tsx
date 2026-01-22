@@ -12,7 +12,7 @@ import { validarRegisterForm } from "../../utils/auth-validators";
 import { toaster } from "../../lib/toast";
 
 interface RegisterFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (email: string) => void;
   onSwitchToLogin?: () => void;
 }
 
@@ -61,7 +61,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         description: "Por favor verifica tu email para activar tu cuenta",
         type: "success",
       });
-      onSuccess?.();
+      onSuccess?.(formData.email);
     } catch (error: any) {
       console.error("Register error:", error);
       toaster.create({

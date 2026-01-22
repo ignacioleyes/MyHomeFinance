@@ -9,6 +9,17 @@ import {
   Badge,
   Spinner,
 } from "@chakra-ui/react";
+import {
+  DialogActionTrigger,
+  DialogBackdrop,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+} from "@chakra-ui/react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { toaster } from "../../lib/toast";
@@ -40,6 +51,10 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
+
+  // Modal states
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+  const [invitationToCancel, setInvitationToCancel] = useState<PendingInvitation | null>(null);
 
   const loadMembers = async () => {
     try {
@@ -202,12 +217,14 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
     }
   };
 
-  const handleCancelInvitation = async (invitationId: string) => {
+  const handleCancelInvitation = async () => {
+    if (!invitationToCancel) return;
+
     try {
       const { error } = await supabase
         .from("pending_invitations")
         .delete()
-        .eq("id", invitationId);
+        .eq("id", invitationToCancel.id);
 
       if (error) throw error;
 
@@ -216,6 +233,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
         type: "success",
       });
 
+      setInvitationToCancel(null);
       await loadMembers();
     } catch (err: any) {
       console.error("Error canceling invitation:", err);
@@ -227,21 +245,24 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
     }
   };
 
-  const handleRemoveMember = async (memberId: string, memberEmail: string) => {
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return;
+
     try {
       const { error } = await supabase
         .from("household_members")
         .delete()
-        .eq("id", memberId);
+        .eq("id", memberToRemove.id);
 
       if (error) throw error;
 
       toaster.create({
         title: "Miembro eliminado",
-        description: `${memberEmail} fue removido del hogar`,
+        description: `${memberToRemove.email} fue removido del hogar`,
         type: "success",
       });
 
+      setMemberToRemove(null);
       await loadMembers();
     } catch (err: any) {
       console.error("Error removing member:", err);
@@ -259,11 +280,11 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
     <Box
       bg="white"
       p={{ base: 4, md: 6 }}
-      borderRadius="lg"
-      boxShadow="md"
+      borderRadius="2xl"
+      boxShadow="sm"
     >
       <Stack direction="column" gap={4}>
-        <Stack direction="row" justify="space-between" align="center">
+        <Stack direction="row" justify="space-between" align="center" flexWrap="wrap" gap={2}>
           <Heading as="h3" size="md" color="primary.600">
             {householdName}
           </Heading>
@@ -271,7 +292,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
             <Button
               size="sm"
               variant={showInviteForm ? "solid" : "outline"}
-              colorPalette="primary"
+              colorPalette="teal"
               onClick={() => setShowInviteForm(!showInviteForm)}
             >
               {showInviteForm ? "Cancelar" : "+ Invitar"}
@@ -289,32 +310,36 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
           ) : (
             <Stack direction="column" gap={2}>
               {members.map((member) => (
-                <Stack
+                <Box
                   key={member.id}
-                  direction="row"
-                  justify="space-between"
-                  align="center"
                   p={3}
                   bg="gray.50"
-                  borderRadius="md"
+                  borderRadius="xl"
                 >
-                  <Text fontSize="sm">{member.email}</Text>
-                  <Stack direction="row" gap={2} align="center">
-                    <Badge colorPalette={member.role === "admin" ? "orange" : "blue"}>
-                      {member.role === "admin" ? "Admin" : "Miembro"}
-                    </Badge>
-                    {isAdmin && member.user_id !== user?.id && (
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={() => handleRemoveMember(member.id, member.email || "")}
-                      >
-                        Quitar
-                      </Button>
-                    )}
+                  <Stack
+                    direction={{ base: "column", sm: "row" }}
+                    justify="space-between"
+                    align={{ base: "flex-start", sm: "center" }}
+                    gap={2}
+                  >
+                    <Text fontSize="sm" wordBreak="break-all">{member.email}</Text>
+                    <Stack direction="row" gap={2} align="center" flexShrink={0}>
+                      <Badge colorPalette={member.role === "admin" ? "orange" : "blue"}>
+                        {member.role === "admin" ? "Admin" : "Miembro"}
+                      </Badge>
+                      {isAdmin && member.user_id !== user?.id && (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="red"
+                          onClick={() => setMemberToRemove(member)}
+                        >
+                          Quitar
+                        </Button>
+                      )}
+                    </Stack>
                   </Stack>
-                </Stack>
+                </Box>
               ))}
             </Stack>
           )}
@@ -328,28 +353,32 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
             </Text>
             <Stack direction="column" gap={2}>
               {pendingInvitations.map((invitation) => (
-                <Stack
+                <Box
                   key={invitation.id}
-                  direction="row"
-                  justify="space-between"
-                  align="center"
                   p={3}
                   bg="yellow.50"
-                  borderRadius="md"
+                  borderRadius="xl"
                 >
-                  <Text fontSize="sm">{invitation.email}</Text>
-                  <Stack direction="row" gap={2} align="center">
-                    <Badge colorPalette="yellow">Pendiente</Badge>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      colorPalette="red"
-                      onClick={() => handleCancelInvitation(invitation.id)}
-                    >
-                      Cancelar
-                    </Button>
+                  <Stack
+                    direction={{ base: "column", sm: "row" }}
+                    justify="space-between"
+                    align={{ base: "flex-start", sm: "center" }}
+                    gap={2}
+                  >
+                    <Text fontSize="sm" wordBreak="break-all">{invitation.email}</Text>
+                    <Stack direction="row" gap={2} align="center" flexShrink={0}>
+                      <Badge colorPalette="yellow">Pendiente</Badge>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorPalette="red"
+                        onClick={() => setInvitationToCancel(invitation)}
+                      >
+                        Cancelar
+                      </Button>
+                    </Stack>
                   </Stack>
-                </Stack>
+                </Box>
               ))}
             </Stack>
           </Box>
@@ -370,7 +399,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
                 size="lg"
               />
               <Button
-                colorPalette="primary"
+                colorPalette="teal"
                 size="lg"
                 w="full"
                 onClick={handleInvite}
@@ -385,6 +414,94 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
           </Box>
         )}
       </Stack>
+
+      {/* Modal: Confirmar eliminar miembro */}
+      <DialogRoot
+        placement="center"
+        size="sm"
+        open={!!memberToRemove}
+        onOpenChange={(e) => !e.open && setMemberToRemove(null)}
+      >
+        <DialogBackdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <DialogContent
+          position="fixed"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          maxW="400px"
+          w="90%"
+          m={0}
+        >
+          <DialogHeader>
+            <DialogTitle>Eliminar Miembro</DialogTitle>
+            <DialogCloseTrigger />
+          </DialogHeader>
+          <DialogBody pb={4}>
+            <Text>
+              ¿Estás seguro de quitar a <Text as="span" fontWeight="bold">{memberToRemove?.email}</Text> del hogar?
+            </Text>
+            <Text fontSize="sm" color="gray.600" mt={2}>
+              Esta persona ya no podrá ver ni registrar gastos en este hogar.
+            </Text>
+          </DialogBody>
+          <DialogFooter gap={2}>
+            <DialogActionTrigger asChild>
+              <Button variant="outline" flex={1}>Cancelar</Button>
+            </DialogActionTrigger>
+            <Button
+              colorPalette="red"
+              onClick={handleRemoveMember}
+              flex={1}
+            >
+              Quitar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
+
+      {/* Modal: Confirmar cancelar invitación */}
+      <DialogRoot
+        placement="center"
+        size="sm"
+        open={!!invitationToCancel}
+        onOpenChange={(e) => !e.open && setInvitationToCancel(null)}
+      >
+        <DialogBackdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <DialogContent
+          position="fixed"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          maxW="400px"
+          w="90%"
+          m={0}
+        >
+          <DialogHeader>
+            <DialogTitle>Cancelar Invitación</DialogTitle>
+            <DialogCloseTrigger />
+          </DialogHeader>
+          <DialogBody pb={4}>
+            <Text>
+              ¿Estás seguro de cancelar la invitación a <Text as="span" fontWeight="bold">{invitationToCancel?.email}</Text>?
+            </Text>
+            <Text fontSize="sm" color="gray.600" mt={2}>
+              El enlace de invitación enviado dejará de funcionar.
+            </Text>
+          </DialogBody>
+          <DialogFooter gap={2}>
+            <DialogActionTrigger asChild>
+              <Button variant="outline" flex={1}>Volver</Button>
+            </DialogActionTrigger>
+            <Button
+              colorPalette="red"
+              onClick={handleCancelInvitation}
+              flex={1}
+            >
+              Cancelar Invitación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </Box>
   );
 }

@@ -10,9 +10,10 @@ import { getCategoryColors } from "../../theme/categoryColors";
 
 interface ResumenMensualProps {
   resumen: ResumenMensualType;
+  onCategoryClick?: (categoria: Categoria) => void;
 }
 
-export function ResumenMensual({ resumen }: ResumenMensualProps) {
+export function ResumenMensual({ resumen, onCategoryClick }: ResumenMensualProps) {
   const categoriasConGastos = Object.entries(resumen.porCategoria)
     .filter(([, total]) => total > 0)
     .sort(([, a], [, b]) => b - a);
@@ -58,6 +59,10 @@ export function ResumenMensual({ resumen }: ResumenMensualProps) {
                     borderRadius="xl"
                     borderLeft="4px solid"
                     borderLeftColor={colors.border}
+                    cursor={onCategoryClick ? "pointer" : "default"}
+                    onClick={() => onCategoryClick?.(categoria as Categoria)}
+                    _hover={onCategoryClick ? { opacity: 0.85, transform: "translateX(4px)" } : {}}
+                    transition="all 0.2s"
                   >
                     <Stack direction="row" justify="space-between" align="center">
                       <Stack direction="row" align="center" gap={3}>

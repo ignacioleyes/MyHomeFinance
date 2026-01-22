@@ -1,28 +1,41 @@
 import { useState } from "react";
-import { Box, Heading, Stack } from "@chakra-ui/react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Box, Heading, Stack, Spinner, Text, Button } from "@chakra-ui/react";
 import { useHousehold } from "../hooks/useHousehold";
 import { useSupabaseGastos } from "../hooks/useSupabaseGastos";
-import { ListaGastos, ResumenMensual, SelectorMes } from "../components";
-import { GastoFormData } from "../types/gasto.types";
-import { showSuccessToast, showErrorToast } from "../lib/toast";
+import { ResumenMensual, SelectorMes } from "../components";
+import { Categoria } from "../types/gasto.types";
+
+function obtenerMesActual(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
 
 export function ResumenPage() {
-  const { household } = useHousehold();
+  const navigate = useNavigate();
+  const { household, loading: householdLoading } = useHousehold();
   const {
     gastos,
-    eliminarGasto,
-    actualizarGasto,
-    filtrarGastos,
     obtenerResumenMensual,
     mesesDisponibles,
+    loading: gastosLoading,
   } = useSupabaseGastos(household?.id || null);
 
-  const [mesSeleccionado, setMesSeleccionado] = useState<string>("");
+  // Mostrar loading si el household o los gastos están cargando
+  const isLoading = householdLoading || gastosLoading;
 
-  // Obtener gastos filtrados
-  const gastosFiltrados = mesSeleccionado
-    ? filtrarGastos({ mes: mesSeleccionado })
-    : gastos;
+  const [mesSeleccionado, setMesSeleccionado] = useState<string>(obtenerMesActual());
+
+  const handleCategoryClick = (categoria: Categoria) => {
+    const params = new URLSearchParams();
+    params.set("categoria", categoria);
+    if (mesSeleccionado) {
+      params.set("mes", mesSeleccionado);
+    }
+    navigate(`/gastos?${params.toString()}`);
+  };
 
   // Obtener resumen del mes seleccionado
   const resumen = mesSeleccionado
@@ -38,33 +51,14 @@ export function ResumenPage() {
         }, {} as Record<string, number>),
       };
 
-  const handleEliminarGasto = async (id: string) => {
-    try {
-      const success = await eliminarGasto(id);
-      if (success) {
-        showSuccessToast("Gasto eliminado", "El gasto se ha eliminado correctamente");
-      } else {
-        showErrorToast("Error al eliminar", "No se pudo eliminar el gasto");
-      }
-    } catch (error: any) {
-      console.error("Error deleting expense:", error);
-      showErrorToast("Error al eliminar", error.message || "No se pudo eliminar el gasto");
-    }
-  };
-
-  const handleEditarGasto = async (id: string, formData: GastoFormData) => {
-    try {
-      const success = await actualizarGasto(id, formData);
-      if (success) {
-        showSuccessToast("Gasto actualizado", "Los cambios se han guardado correctamente");
-      } else {
-        showErrorToast("Error al actualizar", "No se pudieron guardar los cambios");
-      }
-    } catch (error: any) {
-      console.error("Error updating expense:", error);
-      showErrorToast("Error al actualizar", error.message || "No se pudieron guardar los cambios");
-    }
-  };
+  if (isLoading) {
+    return (
+      <Stack direction="column" align="center" justify="center" py={12} gap={4}>
+        <Spinner size="xl" color="primary.500" borderWidth="3px" />
+        <Text color="gray.600">Cargando resumen...</Text>
+      </Stack>
+    );
+  }
 
   return (
     <Stack direction="column" gap={6} pb={24}>
@@ -84,19 +78,21 @@ export function ResumenPage() {
         <Heading as="h2" size="lg" mb={4} color="gray.700">
           {mesSeleccionado ? "Resumen del Mes" : "Resumen General"}
         </Heading>
-        <ResumenMensual resumen={resumen} />
+        <ResumenMensual resumen={resumen} onCategoryClick={handleCategoryClick} />
       </Box>
 
-      {/* Lista de Gastos */}
+      {/* Link a detalle de gastos */}
       <Box>
-        <Heading as="h2" size="lg" mb={4} color="gray.700">
-          {mesSeleccionado ? "Gastos del Mes" : "Todos los Gastos"}
-        </Heading>
-        <ListaGastos
-          gastos={gastosFiltrados}
-          onEliminar={handleEliminarGasto}
-          onEditar={handleEditarGasto}
-        />
+        <Button
+          as={RouterLink}
+          to="/gastos"
+          colorPalette="teal"
+          variant="outline"
+          size="lg"
+          w="full"
+        >
+          Ver detalle de los gastos
+        </Button>
       </Box>
     </Stack>
   );
