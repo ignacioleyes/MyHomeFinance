@@ -23,3 +23,8 @@ dev-dist
 *.njsproj
 *.sln
 *.sw?
+
+# Project specific
+CLAUDE.md
+*.sql
+supabase/
