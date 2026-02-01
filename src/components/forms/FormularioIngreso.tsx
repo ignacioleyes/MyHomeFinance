@@ -11,9 +11,9 @@ import {
   NativeSelectField,
   NativeSelectRoot,
 } from "@chakra-ui/react";
-import { GastoFormData } from "../../types/gasto.types";
-import { CATEGORIAS } from "../../utils/constants";
-import { validarFormularioGasto } from "../../utils/validators";
+import { IngresoFormData } from "../../types/ingreso.types";
+import { CATEGORIAS_INGRESO } from "../../utils/constants";
+import { validarFormularioIngreso } from "../../utils/validators";
 import { toaster } from "../../lib/toast";
 import {
   obtenerFechaHoy,
@@ -21,25 +21,25 @@ import {
   parsearImporteArgentino,
 } from "../../utils/formatters";
 
-interface FormularioGastoProps {
-  onSubmit: (data: GastoFormData) => Promise<void> | void;
+interface FormularioIngresoProps {
+  onSubmit: (data: IngresoFormData) => Promise<void> | void;
   onCancel?: () => void;
-  initialData?: Partial<GastoFormData>;
+  initialData?: Partial<IngresoFormData>;
   submitLabel?: string;
 }
 
-export function FormularioGasto({
+export function FormularioIngreso({
   onSubmit,
   onCancel,
   initialData,
-  submitLabel = "Guardar Gasto",
-}: FormularioGastoProps) {
+  submitLabel = "Guardar Ingreso",
+}: FormularioIngresoProps) {
   // Convertir importe inicial a formato argentino si existe
   const importeInicialFormateado = initialData?.importe
     ? formatearImporteArgentino(String(initialData.importe).replace(".", ","))
     : "";
 
-  const [formData, setFormData] = useState<GastoFormData>({
+  const [formData, setFormData] = useState<IngresoFormData>({
     importe: initialData?.importe || "",
     categoria: initialData?.categoria || "",
     descripcion: initialData?.descripcion || "",
@@ -47,11 +47,11 @@ export function FormularioGasto({
   });
 
   const [importeDisplay, setImporteDisplay] = useState(importeInicialFormateado);
-  const [errors, setErrors] = useState<Partial<Record<keyof GastoFormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof IngresoFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
-    field: keyof GastoFormData,
+    field: keyof IngresoFormData,
     value: string
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -75,7 +75,7 @@ export function FormularioGasto({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validation = validarFormularioGasto(formData);
+    const validation = validarFormularioIngreso(formData);
 
     if (!validation.isValid) {
       setErrors(validation.errors);
@@ -101,14 +101,14 @@ export function FormularioGasto({
       setImporteDisplay("");
 
       toaster.create({
-        title: "Gasto guardado",
-        description: "El gasto se ha registrado correctamente",
+        title: "Ingreso guardado",
+        description: "El ingreso se ha registrado correctamente",
         type: "success",
       });
     } catch (error) {
       toaster.create({
         title: "Error",
-        description: "No se pudo guardar el gasto",
+        description: "No se pudo guardar el ingreso",
         type: "error",
       });
     } finally {
@@ -157,7 +157,7 @@ export function FormularioGasto({
               borderColor={errors.categoria ? "red.500" : undefined}
             >
               <option value="">Seleccione una categoría</option>
-              {CATEGORIAS.map((cat) => (
+              {CATEGORIAS_INGRESO.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -193,7 +193,7 @@ export function FormularioGasto({
             Descripción (opcional)
           </Text>
           <Textarea
-            placeholder="Detalles adicionales del gasto..."
+            placeholder="Detalles adicionales del ingreso..."
             value={formData.descripcion}
             onChange={(e) => handleChange("descripcion", e.target.value)}
             maxLength={500}
@@ -209,7 +209,7 @@ export function FormularioGasto({
         <Stack direction="column" gap={2} w="full">
           <Button
             type="submit"
-            colorPalette="teal"
+            colorPalette="green"
             size="lg"
             w="full"
             loading={isSubmitting}

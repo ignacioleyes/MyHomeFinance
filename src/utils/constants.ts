@@ -1,4 +1,5 @@
 import { Categoria } from "../types/gasto.types";
+import { CategoriaIngreso } from "../types/ingreso.types";
 
 export const CATEGORIAS: readonly Categoria[] = [
   "Combustible",
@@ -20,6 +21,15 @@ export const CATEGORIAS: readonly Categoria[] = [
   "Entretenimiento",
   "Kiosco",
   "Alquiler",
+  "Otros"
+] as const;
+
+export const CATEGORIAS_INGRESO: readonly CategoriaIngreso[] = [
+  "Sueldo",
+  "Freelance",
+  "Alquiler",
+  "Venta",
+  "Inversiones",
   "Otros"
 ] as const;
 

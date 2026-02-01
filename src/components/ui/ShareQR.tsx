@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { ImQrcode } from "react-icons/im";
 import {
   Box,
   Button,
@@ -47,7 +48,7 @@ export function ShareQR() {
       open={isOpen}
       onOpenChange={(e) => setIsOpen(e.open)}
     >
-      <DialogBackdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+      <DialogBackdrop bg="blackAlpha.600" />
       <DialogTrigger asChild>
         <IconButton
           aria-label="Compartir app"
@@ -57,7 +58,7 @@ export function ShareQR() {
           color="white"
           _hover={{ bg: "whiteAlpha.200" }}
         >
-          <Text>📲</Text>
+          <ImQrcode size={18} />
         </IconButton>
       </DialogTrigger>
 

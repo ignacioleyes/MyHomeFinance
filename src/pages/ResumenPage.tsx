@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Box, Heading, Stack, Spinner, Text, Button } from "@chakra-ui/react";
 import { useHousehold } from "../hooks/useHousehold";
 import { useSupabaseGastos } from "../hooks/useSupabaseGastos";
 import { ResumenMensual, SelectorMes } from "../components";
 import { Categoria } from "../types/gasto.types";
+import { obtenerNombreMes } from "../utils/formatters";
 
 function obtenerMesActual(): string {
   const now = new Date();
@@ -26,7 +27,15 @@ export function ResumenPage() {
   // Mostrar loading si el household o los gastos están cargando
   const isLoading = householdLoading || gastosLoading;
 
-  const [mesSeleccionado, setMesSeleccionado] = useState<string>(obtenerMesActual());
+  const mesActual = obtenerMesActual();
+
+  // Combinar mes actual con meses disponibles
+  const mesesParaSelector = useMemo(() => {
+    const allMeses = new Set([...mesesDisponibles, mesActual]);
+    return Array.from(allMeses).sort((a, b) => b.localeCompare(a));
+  }, [mesesDisponibles, mesActual]);
+
+  const [mesSeleccionado, setMesSeleccionado] = useState<string>(mesActual);
 
   const handleCategoryClick = (categoria: Categoria) => {
     const params = new URLSearchParams();
@@ -63,22 +72,37 @@ export function ResumenPage() {
   return (
     <Stack direction="column" gap={6} pb={24}>
       {/* Selector de Mes */}
-      {mesesDisponibles.length > 0 && (
-        <Box>
-          <SelectorMes
-            mesesDisponibles={mesesDisponibles}
-            mesSeleccionado={mesSeleccionado}
-            onChange={setMesSeleccionado}
-          />
-        </Box>
-      )}
+      <Box>
+        <SelectorMes
+          mesesDisponibles={mesesParaSelector}
+          mesSeleccionado={mesSeleccionado}
+          onChange={setMesSeleccionado}
+        />
+      </Box>
 
       {/* Balance / Resumen Mensual */}
       <Box>
         <Heading as="h2" size="lg" mb={4} color="gray.700">
           {mesSeleccionado ? "Resumen del Mes" : "Resumen General"}
         </Heading>
-        <ResumenMensual resumen={resumen} onCategoryClick={handleCategoryClick} />
+        {resumen.cantidad === 0 ? (
+          <Box
+            bg="white"
+            p={8}
+            borderRadius="2xl"
+            boxShadow="sm"
+            textAlign="center"
+          >
+            <Text fontSize="lg" color="gray.500">
+              En {obtenerNombreMes(mesSeleccionado)} aún no tienes gastos registrados
+            </Text>
+            <Text fontSize="sm" color="gray.400" mt={2}>
+              Agrega tu primer gasto desde la página de inicio
+            </Text>
+          </Box>
+        ) : (
+          <ResumenMensual resumen={resumen} onCategoryClick={handleCategoryClick} />
+        )}
       </Box>
 
       {/* Link a detalle de gastos */}

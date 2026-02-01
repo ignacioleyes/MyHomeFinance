@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHousehold } from "../hooks/useHousehold";
 import { usePendingInvitation } from "../hooks/usePendingInvitation";
-import { HomePage, ResumenPage, GastosPage } from "../pages";
+import { HomePage, ResumenPage, GastosPage, BalancePage } from "../pages";
 import { AuthPage } from "../components/auth/AuthPage";
 import { SetPasswordForm } from "../components/auth/SetPasswordForm";
 import { Layout } from "../components/ui/Layout";
@@ -50,6 +50,7 @@ function ProtectedRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/resumen" element={<ResumenPage />} />
         <Route path="/gastos" element={<GastosPage />} />
+        <Route path="/balance" element={<BalancePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
@@ -58,7 +59,12 @@ function ProtectedRoutes() {
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <ProtectedRoutes />
     </BrowserRouter>
   );

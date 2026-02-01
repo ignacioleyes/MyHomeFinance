@@ -422,7 +422,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
         open={!!memberToRemove}
         onOpenChange={(e) => !e.open && setMemberToRemove(null)}
       >
-        <DialogBackdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <DialogBackdrop bg="blackAlpha.600" />
         <DialogContent
           position="fixed"
           top="50%"
@@ -466,7 +466,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
         open={!!invitationToCancel}
         onOpenChange={(e) => !e.open && setInvitationToCancel(null)}
       >
-        <DialogBackdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <DialogBackdrop bg="blackAlpha.600" />
         <DialogContent
           position="fixed"
           top="50%"

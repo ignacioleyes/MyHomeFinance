@@ -90,6 +90,41 @@ export interface Database {
           updated_at?: string;
         };
       };
+      incomes: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string | null;
+          amount: number;
+          category: string;
+          description: string | null;
+          income_date: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          user_id?: string | null;
+          amount: number;
+          category: string;
+          description?: string | null;
+          income_date: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          user_id?: string | null;
+          amount?: number;
+          category?: string;
+          description?: string | null;
+          income_date?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

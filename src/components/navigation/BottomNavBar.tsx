@@ -46,6 +46,7 @@ export function BottomNavBar() {
   const navItems = [
     { to: "/", icon: "🏠", label: "Inicio" },
     { to: "/resumen", icon: "📊", label: "Resumen" },
+    { to: "/balance", icon: "💰", label: "Balance" },
   ];
 
   return (

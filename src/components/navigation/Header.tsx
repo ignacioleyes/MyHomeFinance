@@ -1,4 +1,5 @@
 import { Box, Heading, Stack, Text, IconButton } from "@chakra-ui/react";
+import { FiLogOut, FiDownload } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import { ShareQR } from "../ui/ShareQR";
@@ -56,7 +57,7 @@ export function Header() {
               color="white"
               _hover={{ bg: "whiteAlpha.200" }}
             >
-              <Text>📥</Text>
+              <FiDownload size={18} />
             </IconButton>
           )}
 
@@ -73,7 +74,7 @@ export function Header() {
             color="white"
             _hover={{ bg: "whiteAlpha.200" }}
           >
-            <Text>🚪</Text>
+            <FiLogOut size={18} />
           </IconButton>
         </Stack>
       </Stack>

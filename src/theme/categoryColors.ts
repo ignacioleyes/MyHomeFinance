@@ -1,4 +1,5 @@
 import { Categoria } from "../types/gasto.types";
+import { CategoriaIngreso } from "../types/ingreso.types";
 
 interface CategoryColorScheme {
   bg: string;
@@ -155,4 +156,49 @@ export const TRANSACTION_TYPE_COLORS = {
 // Helper function to get category colors
 export function getCategoryColors(categoria: Categoria): CategoryColorScheme {
   return CATEGORY_COLORS[categoria] || CATEGORY_COLORS["Otros"];
+}
+
+// Colores para categorías de ingresos
+export const INCOME_CATEGORY_COLORS: Record<CategoriaIngreso, CategoryColorScheme> = {
+  "Sueldo": {
+    bg: "#E8F5E9",
+    border: "#4CAF50",
+    text: "#2E7D32",
+    icon: "#4CAF50",
+  },
+  "Freelance": {
+    bg: "#E3F2FD",
+    border: "#2196F3",
+    text: "#1565C0",
+    icon: "#2196F3",
+  },
+  "Alquiler": {
+    bg: "#FFF3E0",
+    border: "#FF9800",
+    text: "#E65100",
+    icon: "#FF9800",
+  },
+  "Venta": {
+    bg: "#F3E5F5",
+    border: "#9C27B0",
+    text: "#6A1B9A",
+    icon: "#9C27B0",
+  },
+  "Inversiones": {
+    bg: "#E0F2F1",
+    border: "#009688",
+    text: "#00695C",
+    icon: "#009688",
+  },
+  "Otros": {
+    bg: "#FAFAFA",
+    border: "#9E9E9E",
+    text: "#616161",
+    icon: "#9E9E9E",
+  },
+};
+
+// Helper function to get income category colors
+export function getIncomeCategoryColors(categoria: CategoriaIngreso): CategoryColorScheme {
+  return INCOME_CATEGORY_COLORS[categoria] || INCOME_CATEGORY_COLORS["Otros"];
 }

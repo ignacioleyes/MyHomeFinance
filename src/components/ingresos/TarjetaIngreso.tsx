@@ -19,23 +19,23 @@ import {
   DialogTrigger,
 } from "@chakra-ui/react";
 import { Button } from "@chakra-ui/react";
-import { Gasto, GastoFormData } from "../../types/gasto.types";
+import { Ingreso, IngresoFormData } from "../../types/ingreso.types";
 import { formatearMoneda, formatearFecha } from "../../utils/formatters";
-import { FormularioGasto } from "../forms/FormularioGasto";
-import { getCategoryColors } from "../../theme/categoryColors";
+import { FormularioIngreso } from "../forms/FormularioIngreso";
+import { getIncomeCategoryColors } from "../../theme/categoryColors";
 
-interface TarjetaGastoProps {
-  gasto: Gasto;
+interface TarjetaIngresoProps {
+  ingreso: Ingreso;
   onEliminar: (id: string) => void;
-  onEditar: (id: string, data: GastoFormData) => Promise<void>;
+  onEditar: (id: string, data: IngresoFormData) => Promise<void>;
 }
 
-export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps) {
+export function TarjetaIngreso({ ingreso, onEliminar, onEditar }: TarjetaIngresoProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const categoryColors = getCategoryColors(gasto.categoria);
+  const categoryColors = getIncomeCategoryColors(ingreso.categoria);
 
-  const handleEditar = async (data: GastoFormData) => {
-    await onEditar(gasto.id, data);
+  const handleEditar = async (data: IngresoFormData) => {
+    await onEditar(ingreso.id, data);
     setIsEditOpen(false);
   };
 
@@ -54,7 +54,7 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
         <Stack direction="column" align="start" gap={1} flex={1}>
           <Stack direction="row" align="center" gap={2}>
             <Text fontSize="2xl" fontWeight="bold" color={categoryColors.text}>
-              {formatearMoneda(gasto.importe)}
+              {formatearMoneda(ingreso.importe)}
             </Text>
             <Badge
               bg={categoryColors.border}
@@ -63,17 +63,17 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
               borderRadius="full"
               px={2}
             >
-              {gasto.categoria}
+              {ingreso.categoria}
             </Badge>
           </Stack>
 
           <Text fontSize="sm" color="gray.600">
-            {formatearFecha(gasto.fecha)}
+            {formatearFecha(ingreso.fecha)}
           </Text>
 
-          {gasto.descripcion && (
+          {ingreso.descripcion && (
             <Text fontSize="sm" color="gray.700" mt={2}>
-              {gasto.descripcion}
+              {ingreso.descripcion}
             </Text>
           )}
         </Stack>
@@ -89,7 +89,7 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
             <DialogBackdrop bg="blackAlpha.600" />
             <DialogTrigger asChild>
               <IconButton
-                aria-label="Editar gasto"
+                aria-label="Editar ingreso"
                 variant="ghost"
                 colorPalette="blue"
                 size="sm"
@@ -108,18 +108,18 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
               m={0}
             >
               <DialogHeader>
-                <DialogTitle>Editar Gasto</DialogTitle>
+                <DialogTitle>Editar Ingreso</DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
               <DialogBody pb={4}>
-                <FormularioGasto
+                <FormularioIngreso
                   onSubmit={handleEditar}
                   onCancel={() => setIsEditOpen(false)}
                   initialData={{
-                    importe: gasto.importe.toString(),
-                    categoria: gasto.categoria,
-                    descripcion: gasto.descripcion || "",
-                    fecha: gasto.fecha,
+                    importe: ingreso.importe.toString(),
+                    categoria: ingreso.categoria,
+                    descripcion: ingreso.descripcion || "",
+                    fecha: ingreso.fecha,
                   }}
                   submitLabel="Guardar Cambios"
                 />
@@ -132,7 +132,7 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
             <DialogBackdrop bg="blackAlpha.600" />
             <DialogTrigger asChild>
               <IconButton
-                aria-label="Eliminar gasto"
+                aria-label="Eliminar ingreso"
                 variant="ghost"
                 colorPalette="red"
                 size="sm"
@@ -151,12 +151,12 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
               m={0}
             >
               <DialogHeader>
-                <DialogTitle>Eliminar Gasto</DialogTitle>
+                <DialogTitle>Eliminar Ingreso</DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
               <DialogBody pb={4}>
                 <Text>
-                  ¿Está seguro de eliminar este gasto de {formatearMoneda(gasto.importe)}?
+                  ¿Está seguro de eliminar este ingreso de {formatearMoneda(ingreso.importe)}?
                   Esta acción no se puede deshacer.
                 </Text>
               </DialogBody>
@@ -166,7 +166,7 @@ export function TarjetaGasto({ gasto, onEliminar, onEditar }: TarjetaGastoProps)
                 </DialogActionTrigger>
                 <Button
                   colorPalette="red"
-                  onClick={() => onEliminar(gasto.id)}
+                  onClick={() => onEliminar(ingreso.id)}
                   flex={1}
                 >
                   Eliminar
