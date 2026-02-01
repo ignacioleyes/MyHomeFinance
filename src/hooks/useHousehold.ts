@@ -72,48 +72,23 @@ export function useHousehold() {
     }
 
     try {
-      // Create household
-      const { data: newHousehold, error: createError } = await supabase
-        .from("households")
-        .insert({
-          name: "Mi Hogar",
-          created_by: user.id,
-        } as any)
-        .select()
-        .single();
+      // Usar función RPC que crea household + agrega admin en una transacción
+      const { data, error: rpcError } = await supabase.rpc(
+        "create_household_with_admin",
+        { p_name: "Mi Hogar" }
+      );
 
-      if (createError) {
+      if (rpcError) {
         console.error("Error creating household:", {
-          code: createError.code,
-          message: createError.message,
-          details: createError.details,
-          hint: createError.hint
+          code: rpcError.code,
+          message: rpcError.message,
+          details: rpcError.details,
+          hint: rpcError.hint
         });
-        throw createError;
+        throw rpcError;
       }
 
-      // Add user as admin member explicitly (no trigger)
-      const { error: memberError } = await supabase
-        .from("household_members")
-        .insert({
-          household_id: (newHousehold as any).id,
-          user_id: user.id,
-          role: "admin",
-        } as any);
-
-      if (memberError) {
-        console.error("Error adding member:", {
-          code: memberError.code,
-          message: memberError.message,
-          details: memberError.details,
-          hint: memberError.hint
-        });
-        // If member insert fails but household was created, try to clean up
-        await supabase.from("households").delete().eq("id", (newHousehold as any).id);
-        throw memberError;
-      }
-
-      return newHousehold;
+      return data;
     } catch (err: any) {
       console.error("Error in createDefaultHousehold:", {
         message: err.message,

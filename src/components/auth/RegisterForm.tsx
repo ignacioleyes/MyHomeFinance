@@ -153,7 +153,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         {/* Submit Button */}
         <Button
           type="submit"
-          colorPalette="primary"
+          colorPalette="teal"
           size="lg"
           w="full"
           loading={isSubmitting}
